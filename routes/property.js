@@ -6,9 +6,10 @@ const pool = require("../config/database");
 router.get("/list", async (req, res) => {
   try {
     const properties = await pool.query("SELECT * FROM property_info");
+
     res.json({
       status: "success",
-      properties: properties,
+      properties: properties[0],
     });
   } catch (error) {
     console.error(error);
@@ -37,17 +38,10 @@ router.get("/details/:property_id", async (req, res) => {
       });
     }
 
-    // Retrieve ownership details from user_token_info
-    const ownership = await pool.query(
-      "SELECT user_id, token_amount FROM user_token_info WHERE property_id = ?",
-      [propertyId]
-    );
-
     res.json({
       status: "success",
       property: {
         ...property[0],
-        // ownership: ownership,
       },
     });
   } catch (error) {

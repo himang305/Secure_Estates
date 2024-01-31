@@ -1,8 +1,6 @@
 const express = require("express");
 const router = express.Router();
 const bcrypt = require("bcrypt");
-
-// Import the MySQL connection pool from app.js
 const pool = require("../config/database");
 
 // User Registration
