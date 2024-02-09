@@ -11,6 +11,32 @@ router.post("/make", async (req, res) => {
   try {
     const { user_id, property_id, payment_date, token_num } = req.body;
 
+    // Check if the user exists
+    const user = await pool.query("SELECT * FROM user_info WHERE user_id = ?", [
+      user_id,
+    ]);
+
+    if (user[0].length === 0) {
+      return res.status(404).json({
+        status: "error",
+        message: "User not found",
+      });
+    }
+
+    // Check if the property exists
+    const property = await pool.query(
+      "SELECT * FROM property_info WHERE property_id = ?",
+      [property_id]
+    );
+
+    if (property[0].length === 0) {
+      return res.status(404).json({
+        status: "error",
+        message: "Property not found",
+      });
+    }
+
+    // Process payment only if both user and property exist
     const paymentResult = await processPayment(user_id, token_num);
 
     if (!paymentResult.success) {

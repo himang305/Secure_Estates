@@ -1,6 +1,20 @@
 const express = require("express");
 const router = express.Router();
 const pool = require("../config/database");
+const multer = require("multer");
+
+// Set up multer storage configuration
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "uploads/"); // Specify the destination folder for uploaded files
+  },
+  filename: function (req, file, cb) {
+    cb(null, Date.now() + "-" + file.originalname); // Generate unique file names
+    console.log(req.file);
+  },
+});
+
+const upload = multer({ storage: storage });
 
 // Get Property List
 router.get("/list", async (req, res) => {
@@ -54,13 +68,19 @@ router.get("/details/:property_id", async (req, res) => {
 });
 
 // Add a new property
-router.post("/add", async (req, res) => {
+router.post("/add", upload.single("image"), async (req, res) => {
   try {
     const { property_name, address, description, status } = req.body;
+    let imgFilename = null;
+
+    // Check if a file has been uploaded
+    if (req.file) {
+      imgFilename = req.file.filename; // Retrieve the file name of the uploaded image
+    }
 
     const result = await pool.query(
-      "INSERT INTO property_info (property_name, address, description, status) VALUES (?, ?, ?, ?)",
-      [property_name, address, description, status]
+      "INSERT INTO property_info (property_name, address, description, status, img_filename) VALUES (?, ?, ?, ?, ?)",
+      [property_name, address, description, status, imgFilename]
     );
 
     res.json({
@@ -78,14 +98,21 @@ router.post("/add", async (req, res) => {
 });
 
 // Update property details
-router.put("/update/:property_id", async (req, res) => {
+// Update property details
+router.put("/update/:property_id", upload.single("image"), async (req, res) => {
   try {
     const propertyId = req.params.property_id;
     const { property_name, address, description, status } = req.body;
+    let imgFilename = null;
+
+    // Check if a file has been uploaded
+    if (req.file) {
+      imgFilename = req.file.filename; // Retrieve the file name of the uploaded image
+    }
 
     const result = await pool.query(
-      "UPDATE property_info SET property_name = ?, address = ?, description = ?, status = ? WHERE property_id = ?",
-      [property_name, address, description, status, propertyId]
+      "UPDATE property_info SET property_name = ?, address = ?, description = ?, status = ?, img_filename = ? WHERE property_id = ?",
+      [property_name, address, description, status, imgFilename, propertyId]
     );
 
     if (result.affectedRows === 0) {
